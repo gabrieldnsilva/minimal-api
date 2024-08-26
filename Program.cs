@@ -100,6 +100,27 @@ app.MapPut("/veiculos/{id}", ([FromRoute]  int id, VehiclesDTO vehiclesDTO , IVe
 }
 ).WithTags("Veiculos");
 
+
+app.MapDelete("/veiculos/{id}", ([FromRoute]  int id, IVehiclesServices vehiclesServices) =>
+{
+    var vehicle = vehiclesServices.SearchId(id); 
+
+    if (vehicle == null)
+    {
+        return Results.NotFound();
+    }
+    else
+    {
+        
+        vehiclesServices.Remove(vehicle);
+
+        return Results.NoContent();
+
+    }
+    
+}
+).WithTags("Veiculos");
+
 #endregion
 
 
