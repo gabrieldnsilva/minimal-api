@@ -41,8 +41,43 @@ app.MapPost("/administators/login", ([FromBody] LoginDTO loginDTO, IAdministrato
 #endregion
 
 #region Vehicles
-app.MapPost("/vehicles", ([FromBody]  VehiclesDTO vehiclesDTO, IVehiclesServices vehiclesServices) =>
+
+ValidationErrors validateDTO(VehiclesDTO vehiclesDTO)
 {
+    var validation = new ValidationErrors
+    {
+        Messages = new List<string>()
+    };
+
+    if(string.IsNullOrEmpty(vehiclesDTO.Nome))
+    {
+        validation.Messages.Add("Valor de \"nome\" não pode ser vazio (null)");
+    }
+
+    if(string.IsNullOrEmpty(vehiclesDTO.Marca))
+    {
+        validation.Messages.Add("Valor de \"marca\" não pode ser vazio (null)");
+    }
+    
+    if(vehiclesDTO.Ano < 1886 || vehiclesDTO.Ano > DateTime.Now.Year) //Valida com base no primeiro carro fabricado e o ano atual do usuario
+    {
+        validation.Messages.Add("O ano de fabricação deve estar entre 1886 e o ano atual");
+    }
+
+    return validation;
+}
+
+ app.MapPost("/vehicles", ([FromBody]  VehiclesDTO vehiclesDTO, IVehiclesServices vehiclesServices) =>
+{
+
+    var validation = validateDTO(vehiclesDTO); 
+
+    if(validation.Messages.Count > 0 ) //Verifica se foram incrmentados erros na validação para execução de BadRequest
+    {
+        return Results.BadRequest(validation);  
+    }
+
+
     var vehicle = new Vehicles
     {
         Nome = vehiclesDTO.Nome,
@@ -67,11 +102,8 @@ app.MapGet("/veiculos", ([FromQuery]  int? pagina, IVehiclesServices vehiclesSer
 app.MapGet("/veiculos/{id}", ([FromRoute]  int id, IVehiclesServices vehiclesServices) =>
 {
     var vehicle = vehiclesServices.SearchId(id); 
+    if (vehicle == null) return Results.NotFound();
 
-    if (vehicle == null)
-    {
-        return Results.NotFound();
-    }
 
     return Results.Ok(vehicle);
 }
@@ -81,12 +113,15 @@ app.MapPut("/veiculos/{id}", ([FromRoute]  int id, VehiclesDTO vehiclesDTO , IVe
 {
     var vehicle = vehiclesServices.SearchId(id); 
 
-    if (vehicle == null)
+    if (vehicle == null) return Results.NotFound();
+
+    var validation = validateDTO(vehiclesDTO); 
+
+    if(validation.Messages.Count > 0) 
     {
-        return Results.NotFound();
+        return Results.BadRequest(validation);  
     }
-    else
-    {
+    
         vehicle.Nome =  vehiclesDTO.Nome;
         vehicle.Marca =  vehiclesDTO.Marca;
         vehicle.Ano =  vehiclesDTO.Ano;
@@ -94,8 +129,6 @@ app.MapPut("/veiculos/{id}", ([FromRoute]  int id, VehiclesDTO vehiclesDTO , IVe
         vehiclesServices.Update(vehicle);
 
         return Results.Ok(vehicle);
-
-    }
     
 }
 ).WithTags("Veiculos");
