@@ -50,7 +50,7 @@ namespace minimal_api.Dominio.Services
 
             if (!string.IsNullOrEmpty(nome))
             {
-                query =  query.Where(v => EF.Functions.Like(v.Nome.ToLower(), $"%{nome}%"));
+                query = query.Where(v => EF.Functions.Like(v.Nome.ToLower(), $"%{nome}%"));
             }
 
             int ItemsPerPage = 10;

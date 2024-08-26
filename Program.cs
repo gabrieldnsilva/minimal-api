@@ -6,10 +6,13 @@ using minimal_api.Dominio.Interfaces;
 using minimal_api.Dominio.Entities;
 using minimal_api.Dominio.Services;
 using Microsoft.AspNetCore.Mvc;
+using minimal_api.Dominio.ModelViews;
 
+#region Builder
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddScoped<IAdministratorServices, AdministratorServices>();
+builder.Services.AddScoped<IVehiclesServices, VehiclesServices>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,18 +25,46 @@ builder.Services.AddDbContext<DbContexto>(Options => {
 }  );
 
 var app = builder.Build();
+#endregion
 
-app.MapGet("/", () => "Hello World!");
+#region Home
+app.MapGet("/", () =>
+{
+    Results.Json(new Home());
+});
+#endregion
 
-app.MapPost("/login", ([FromBody] LoginDTO loginDTO, IAdministratorServices administratorServices) => {
+#region Administrators
+app.MapPost("/administators/login", ([FromBody] LoginDTO loginDTO, IAdministratorServices administratorServices) => {
     if (administratorServices.Login(loginDTO) != null)
         return Results.Ok("Login com sucesso!");
     else
         return Results.Unauthorized();
 });
+#endregion
 
+#region Vehicles
+app.MapPost("/vehicles", ([FromBody]  VehiclesDTO vehiclesDTO, IVehiclesServices vehiclesServices) =>
+{
+    var vehicle = new Vehicles
+    {
+        Nome = vehiclesDTO.Nome,
+        Marca = vehiclesDTO.Marca,
+        Ano = vehiclesDTO.Ano
+    };
+
+    vehiclesServices.Include(vehicle); 
+
+    return Results.Created($"/Veiculo/{vehicle.Id}", vehicle);
+}
+);
+#endregion
+
+
+#region App
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.Run();
+#endregion
 
