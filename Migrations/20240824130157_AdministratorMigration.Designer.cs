@@ -49,7 +49,7 @@ namespace minimal_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Administradores");
+                    b.ToTable("Administrators");
                 });
 #pragma warning restore 612, 618
         }

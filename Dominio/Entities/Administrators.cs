@@ -23,6 +23,6 @@ namespace minimal_api.Dominio.Entities
         public string Senha { get; set; } = default!;
 
         [StringLength(255)]
-        public  string Profile { get; set; } = default!;
+        public  string Perfil { get; set; } = default!;
     }
 }

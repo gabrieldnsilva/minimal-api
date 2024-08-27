@@ -14,7 +14,7 @@ namespace minimal_api.Infraestrutura.DB;
         {
             _configuracaoAppSettings = configuracaoAppSettings;
         }
-    public DbSet<Administrators> Administradores { get; set; } = default!;
+    public DbSet<Administrators> Administrators { get; set; } = default!;
     public DbSet<Vehicles> Vehicles { get; set; } = default!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -24,7 +24,7 @@ namespace minimal_api.Infraestrutura.DB;
                 Id = 1,
                 Email = "admin@teste.com",
                 Senha = "123456",
-                Profile = "Adm"
+                Perfil = "Adm"
             }
         );
     }

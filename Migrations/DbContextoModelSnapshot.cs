@@ -46,7 +46,7 @@ namespace minimal_api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Administradores");
+                    b.ToTable("Administrators");
 
                     b.HasData(
                         new

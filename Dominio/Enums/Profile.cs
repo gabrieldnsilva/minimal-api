@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace minimal_api.Dominio.Enums
 {
-    public enum Profile
+    public enum Perfil
     {
         Administrator,
 

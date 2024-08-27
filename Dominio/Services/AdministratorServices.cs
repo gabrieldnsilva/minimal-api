@@ -20,7 +20,7 @@ namespace minimal_api.Dominio.Services
 
         public Administrators? Login(LoginDTO loginDTO)
         {
-            var adm = _context.Administradores.Where(a => a.Email == loginDTO.Email 
+            var adm = _context.Administrators.Where(a => a.Email == loginDTO.Email 
                 && a.Senha == loginDTO.Senha).FirstOrDefault();
             
             return adm;
@@ -29,13 +29,13 @@ namespace minimal_api.Dominio.Services
 
         public Administrators? SearchId(int id)
         {
-            return _context.Administradores.Where(v => v.Id == id).FirstOrDefault();
+            return _context.Administrators.Where(v => v.Id == id).FirstOrDefault();
             
         }
 
         public List<Administrators> All(int? pagina)
         {
-            var query = _context.Administradores.AsQueryable();
+            var query = _context.Administrators.AsQueryable();
             int ItemsPerPage = 10;  
 
             if (pagina != null) 
@@ -46,7 +46,7 @@ namespace minimal_api.Dominio.Services
 
         public Administrators Include(Administrators administrators)
         {
-            _context.Administradores.Add(administrators);
+            _context.Administrators.Add(administrators);
             _context.SaveChanges();
 
             return administrators;
