@@ -24,7 +24,7 @@ namespace minimal_api.Infraestrutura.DB;
                 Id = 1,
                 Email = "admin@teste.com",
                 Senha = "123456",
-                Perfil = "Adm"
+                Profile = "Adm"
             }
         );
     }

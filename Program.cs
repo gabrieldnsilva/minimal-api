@@ -7,6 +7,7 @@ using minimal_api.Dominio.Entities;
 using minimal_api.Dominio.Services;
 using Microsoft.AspNetCore.Mvc;
 using minimal_api.Dominio.ModelViews;
+using minimal_api.Dominio.Enums;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
@@ -32,12 +33,94 @@ app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
 #endregion
 
 #region Administrators
-app.MapPost("/administators/login", ([FromBody] LoginDTO loginDTO, IAdministratorServices administratorServices) => {
+app.MapPost("/administradores/login", ([FromBody] LoginDTO loginDTO, IAdministratorServices administratorServices) => {
     if (administratorServices.Login(loginDTO) != null)
         return Results.Ok("Login com sucesso!");
     else
         return Results.Unauthorized();
 }).WithTags("Administradores");
+
+
+app.MapGet("/administadores", ([FromQuery] int? pagina, IAdministratorServices administratorServices) => {
+    var admins = new List<AdministratorsModelView>();
+
+    var administadores = administratorServices.All(pagina);
+
+    foreach (var adm in administadores)
+    {
+        admins.Add(new AdministratorsModelView
+        {
+            Id = adm.Id,
+            Email = adm.Email,
+            Profile = (adm.Profile)
+        });
+    }
+
+}).WithTags("Administradores");
+
+
+
+app.MapGet("/administradores/{id}", ([FromRoute]  int id, IAdministratorServices administratorServices) =>
+{
+    var administrador = administratorServices.SearchId(id); 
+    if (administrador == null) return Results.NotFound();
+
+
+    return Results.Ok(new AdministratorsModelView
+        {
+            Id = administrador.Id,
+            Email = administrador.Email,
+            Profile = (administrador.Profile)
+        });
+}
+).WithTags("Administradores");
+
+app.MapPost("/administators", ([FromBody] AdministratorsDTO administratorsDTO, IAdministratorServices administratorServices) => {
+    var validation = new ValidationErrors
+    {
+        Messages = new List<string>()
+    };
+
+    if (string.IsNullOrEmpty(administratorsDTO.Email))
+    {
+        validation.Messages.Add("Email não pode ser vazio");
+        
+    }
+    if (string.IsNullOrEmpty(administratorsDTO.Senha))
+    {
+        validation.Messages.Add("Senha não pode ser vazio");
+        
+    }
+    if ((administratorsDTO.Profile == null))
+    {
+        validation.Messages.Add("Perfil não pode ser vazio");
+        
+    }
+
+    if(validation.Messages.Count > 0 ) //Verifica se foram incrmentados erros na validação para execução de BadRequest
+    {
+        return Results.BadRequest(validation);  
+    }
+
+
+    var administrator = new Administrators
+    {
+        Email = administratorsDTO.Email,
+        Senha = administratorsDTO.Senha,
+        Profile = administratorsDTO.Profile?.ToString() ?? Profile.Editor.ToString()
+    };
+
+    administratorServices.Include(administrator); 
+
+    return Results.Created($"/administrador/{administrator.Id}", new AdministratorsModelView
+        {
+            Id = administrator.Id,
+            Email = administrator.Email,
+            Profile = (administrator.Profile)
+        });
+
+}).WithTags("Administradores");
+
 #endregion
 
 #region Vehicles
