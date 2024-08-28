@@ -13,6 +13,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Microsoft.OpenApi.Models;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
@@ -29,16 +30,53 @@ builder.Services.AddAuthentication(option => {
     option.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateLifetime = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-    };
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key)),
+
+        ValidateIssuer = false,
+        ValidateAudience = false,
+    };  
 });
+
+
 
 builder.Services.AddScoped<IAdministratorServices, AdministratorServices>();
 builder.Services.AddScoped<IVehiclesServices, VehiclesServices>();
 
 builder.Services.AddAuthorization();
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Insira o Token JWT abaixo:"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+        
+
+        
+    });
+}
+
+);
 
 builder.Services.AddDbContext<DbContexto>(Options => {
     Options.UseMySql(
@@ -51,7 +89,7 @@ var app = builder.Build();
 #endregion
 
 #region Home
-app.MapGet("/", () => Results.Json(new Home())).WithTags("Home");
+app.MapGet("/", () => Results.Json(new Home())).AllowAnonymous().WithTags("Home");
 #endregion
 
 #region Administrators
@@ -94,29 +132,32 @@ app.MapPost("/administrators/login", ([FromBody] LoginDTO loginDTO, IAdministrat
     }
 
         return Results.Unauthorized();
-}).WithTags("Administrators");
+}).AllowAnonymous().WithTags("Administrators");
 
 
-app.MapGet("/administadores", ([FromQuery] int? pagina, IAdministratorServices administratorServices) => {
+app.MapGet("/administators/", ([FromQuery] int? pagina, IAdministratorServices administratorServices) => {
     var admins = new List<AdministratorsModelView>();
 
     var administadores = administratorServices.All(pagina);
 
     foreach (var adm in administadores)
     {
-        admins.Add(new AdministratorsModelView
+         admins.Add(new AdministratorsModelView
         {
             Id = adm.Id,
             Email = adm.Email,
-            Perfil = (adm.Perfil)
+            Perfil = adm.Perfil
+
         });
     }
+
+    return Results.Ok(admins);
 
 }).RequireAuthorization().WithTags("Administrators");
 
 
 
-app.MapGet("/administradores/{id}", ([FromRoute]  int id, IAdministratorServices administratorServices) =>
+app.MapGet("/administrators/{id}", ([FromRoute]  int id, IAdministratorServices administratorServices) =>
 {
     var administrador = administratorServices.SearchId(id); 
     if (administrador == null) return Results.NotFound();
@@ -127,6 +168,7 @@ app.MapGet("/administradores/{id}", ([FromRoute]  int id, IAdministratorServices
             Id = administrador.Id,
             Email = administrador.Email,
             Perfil = (administrador.Perfil)
+
         });
 }
 ).RequireAuthorization().WithTags("Administrators");
