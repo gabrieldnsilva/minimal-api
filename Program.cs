@@ -14,6 +14,7 @@ using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 #region Builder
 var builder = WebApplication.CreateBuilder(args);
@@ -104,7 +105,8 @@ string GenerateTokenJwt(Administrators administrators)
     var claims =  new List<Claim>()
     {
         new Claim("Email", administrators.Email),
-        new Claim("Perfil", administrators.Perfil)
+        new Claim("Perfil", administrators.Perfil),
+        new Claim(ClaimTypes.Role, administrators.Perfil)
     };
 
     var token = new JwtSecurityToken(
@@ -153,7 +155,9 @@ app.MapGet("/administators/", ([FromQuery] int? pagina, IAdministratorServices a
 
     return Results.Ok(admins);
 
-}).RequireAuthorization().WithTags("Administrators");
+}).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.WithTags("Administrators");
 
 
 
@@ -171,7 +175,9 @@ app.MapGet("/administrators/{id}", ([FromRoute]  int id, IAdministratorServices 
 
         });
 }
-).RequireAuthorization().WithTags("Administrators");
+).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.WithTags("Administrators");
 
 app.MapPost("/administrators", ([FromBody] AdministratorsDTO administratorsDTO, IAdministratorServices administratorServices) => {
     var validation = new ValidationErrors
@@ -217,7 +223,9 @@ app.MapPost("/administrators", ([FromBody] AdministratorsDTO administratorsDTO, 
             Perfil = (administrator.Perfil)
         });
 
-}).RequireAuthorization().WithTags("Administrators");
+}).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.WithTags("Administrators");
 
 #endregion
 
@@ -270,7 +278,10 @@ ValidationErrors validateDTO(VehiclesDTO vehiclesDTO)
 
     return Results.Created($"/Veiculo/{vehicle.Id}", vehicle);
 }
-).RequireAuthorization().WithTags("Veiculos");
+).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Editor"})
+.WithTags("Veiculos");
 
 app.MapGet("/veiculos", ([FromQuery]  int? pagina, IVehiclesServices vehiclesServices) =>
 {
@@ -278,7 +289,10 @@ app.MapGet("/veiculos", ([FromQuery]  int? pagina, IVehiclesServices vehiclesSer
 
     return Results.Ok(vehicles);
 }
-).RequireAuthorization().WithTags("Veiculos");
+).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Editor"})
+.WithTags("Veiculos");
 
 app.MapGet("/veiculos/{id}", ([FromRoute]  int id, IVehiclesServices vehiclesServices) =>
 {
@@ -288,7 +302,10 @@ app.MapGet("/veiculos/{id}", ([FromRoute]  int id, IVehiclesServices vehiclesSer
 
     return Results.Ok(vehicle);
 }
-).RequireAuthorization().WithTags("Veiculos");
+).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Editor"})
+.WithTags("Veiculos");
 
 app.MapPut("/veiculos/{id}", ([FromRoute]  int id, VehiclesDTO vehiclesDTO , IVehiclesServices vehiclesServices) =>
 {
@@ -312,7 +329,10 @@ app.MapPut("/veiculos/{id}", ([FromRoute]  int id, VehiclesDTO vehiclesDTO , IVe
         return Results.Ok(vehicle);
     
 }
-).RequireAuthorization().WithTags("Veiculos");
+).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Editor"})
+.WithTags("Veiculos");
 
 
 app.MapDelete("/veiculos/{id}", ([FromRoute]  int id, IVehiclesServices vehiclesServices) =>
@@ -333,7 +353,10 @@ app.MapDelete("/veiculos/{id}", ([FromRoute]  int id, IVehiclesServices vehicles
     }
     
 }
-).RequireAuthorization().WithTags("Veiculos");
+).RequireAuthorization()
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Administrator"})
+.RequireAuthorization(new AuthorizeAttribute {Roles = "Editor"})
+.WithTags("Veiculos");
 
 #endregion
 
